@@ -19,7 +19,7 @@ use frame_support::{
 	dispatch::{DispatchInfo, GetDispatchInfo},
 	traits::{InherentBuilder, SignedTransactionBuilder},
 };
-use scale_codec::{Decode, DecodeWithMemTracking, Encode};
+use scale_codec::{Decode, DecodeWithMemTracking, Encode, Error};
 use scale_info::TypeInfo;
 use sp_runtime::{
 	generic::{self, Preamble},
@@ -30,7 +30,7 @@ use sp_runtime::{
 	transaction_validity::{InvalidTransaction, TransactionValidityError},
 	OpaqueExtrinsic, RuntimeDebug,
 };
-
+use sp_runtime::traits::LazyExtrinsic;
 use crate::{CheckedExtrinsic, CheckedSignature, SelfContainedCall};
 
 /// A extrinsic right from the external world. This is unchecked and so
@@ -168,6 +168,22 @@ where
 
 	fn call(&self) -> &Self::Call {
 		&self.0.function
+	}
+
+	fn into_call(self) -> Self::Call {
+		self.0.into_call()
+	}
+}
+
+impl<Address, Call, Signature, Extension> LazyExtrinsic for UncheckedExtrinsic<Address, Call, Signature, Extension>
+where
+	Address: Decode +  TypeInfo,
+	Call: TypeInfo + DecodeWithMemTracking,
+	Signature: Decode + TypeInfo,
+	Extension: Decode + TypeInfo,
+{
+	fn decode_unprefixed(data: &[u8]) -> Result<Self, Error> {
+		Ok(Self(LazyExtrinsic::decode_unprefixed(data)?))
 	}
 }
 

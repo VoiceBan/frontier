@@ -19,7 +19,7 @@
 use pallet_evm::AddressMapping;
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
-use sp_core::{keccak_256, Decode, DecodeWithMemTracking, Encode, MaxEncodedLen, H160, H256};
+use sp_core::{ecdsa, keccak_256, Decode, DecodeWithMemTracking, Encode, MaxEncodedLen, H160, H256};
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 #[derive(Serialize, Deserialize, derive_more::Display)]
@@ -129,6 +129,9 @@ impl From<sp_runtime::MultiSignature> for MockSignature {
 				panic!("Sr25519 not supported for MockSignature")
 			}
 			sp_runtime::MultiSignature::Ecdsa(sig) => Self(sig),
+			sp_runtime::MultiSignature::Eth(sig) => Self(
+				ecdsa::Signature::from_raw(sig.0),
+			),
 		}
 	}
 }
